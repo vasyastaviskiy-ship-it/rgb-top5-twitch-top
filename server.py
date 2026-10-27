@@ -185,7 +185,16 @@ html,body{height:auto!important;min-height:780px!important;overflow:visible!impo
 body{padding:36px 36px 100px!important}
 .shell{margin-bottom:65px!important}
 """
-RESTORED_GIFTS_HTML = HTML.replace(_CURRENT_CSS, _ORIGINAL_CSS + _RGB_GAMING_CSS + _FULL_HEIGHT_CSS, 1)
+_VISIBLE_NEON_CSS = """
+/* Animate actual outer light, not only gradient position. */
+@keyframes rgbGlowPulse {
+  0%,100% {box-shadow:0 0 16px 5px #00f5ffee,0 0 38px 10px #00eaffaa,0 0 54px 14px #8c27ff88}
+  33% {box-shadow:0 0 16px 5px #ff1b93ee,0 0 38px 10px #ff1b93aa,0 0 54px 14px #00f5ff88}
+  66% {box-shadow:0 0 16px 5px #9b33ffee,0 0 38px 10px #8c27ffaa,0 0 54px 14px #11ffb588}
+}
+.shell{animation:rgbGamingMove 3s linear infinite,rgbGlowPulse 3s linear infinite!important}
+"""
+RESTORED_GIFTS_HTML = HTML.replace(_CURRENT_CSS, _ORIGINAL_CSS + _RGB_GAMING_CSS + _FULL_HEIGHT_CSS + _VISIBLE_NEON_CSS, 1)
 
 async def index(request): return web.Response(text=RESTORED_GIFTS_HTML,content_type="text/html")
 async def status(request):
