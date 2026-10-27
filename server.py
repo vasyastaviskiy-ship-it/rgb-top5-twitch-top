@@ -3,7 +3,7 @@ from aiohttp import web
 from TikTokLive import TikTokLiveClient
 from TikTokLive.events import ConnectEvent, DisconnectEvent, GiftEvent, LikeEvent
 
-USER=os.environ.get("TIKTOK_USERNAME","twitch_top").lstrip("@")
+USER=os.environ.get("TIKTOK_USERNAME","twitch-top").lstrip("@")
 PORT=int(os.environ.get("PORT","10000"))
 state={"status":"starting","message":"Ожидание","top":[],"last_gift":None}
 scores={}
