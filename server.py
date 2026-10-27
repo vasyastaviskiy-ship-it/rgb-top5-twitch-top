@@ -156,7 +156,9 @@ async def likes_api(request):
     r.headers["Cache-Control"]="no-store"
     return r
 
-async def index(request): return web.Response(text=HTML,content_type="text/html")
+
+RESTORED_GIFTS_HTML=HTML.replace('</head>','<style>.shell{border-radius:25px!important;background:linear-gradient(115deg,#00edff,#742dff,#ff299d,#00f5cd,#00edff)!important;background-size:400% 400%!important;animation:rgb 7s linear infinite!important;box-shadow:0 0 20px #00eaff8f,0 0 40px #fa20c78e!important;border:0!important;filter:none!important;padding:4px!important}.inside{background:linear-gradient(130deg,rgba(7,12,37,.83),rgba(29,10,49,.79))!important;border-radius:21px!important}.rank{border:1px solid #b8e9ff88!important;border-radius:14px!important;background:rgba(19,25,55,.86)!important;box-shadow:0 0 12px #792cff50,inset 0 0 10px #00eaff22!important}.rank:first-child{border:1px solid #ffe18b!important;box-shadow:0 0 13px #ffd36c77!important}.rank:before{display:block!important}.name,.num{color:white!important;text-shadow:0 2px 3px #000!important}.line{background:linear-gradient(90deg,#00edff,#ff3ace,#7d4cff)!important;box-shadow:0 0 12px #fc37db!important}</style></head>')
+async def index(request): return web.Response(text=RESTORED_GIFTS_HTML,content_type="text/html")
 async def status(request):
     r=web.json_response(state)
     r.headers["Cache-Control"]="no-store"
