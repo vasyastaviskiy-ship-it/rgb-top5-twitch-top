@@ -157,7 +157,7 @@ async def likes_api(request):
     return r
 
 
-RESTORED_GIFTS_HTML=HTML.replace('</head>', '<style>.shell{background:linear-gradient(120deg,#00eeff,#ba23ff,#ff2892,#04ffc3,#00eeff)!important;background-size:400% 400%!important;animation:rgb 7s linear infinite!important;box-shadow:0 0 26px #b825ff99,0 0 44px #00ecff65!important}.inside{background:#101329!important;backdrop-filter:none!important}.rank{background:#222b43!important}.rank:first-child{background:#34283b!important}.name,.num{color:#fff!important;text-shadow:0 2px 3px #000!important}</style></head>')
+RESTORED_GIFTS_HTML=HTML.replace('</head>', '<style>.shell{margin-bottom:55px!important}.inside{padding-bottom:28px!important}body{overflow:visible!important;padding-bottom:80px!important}html{overflow:visible!important}.shell{background:linear-gradient(120deg,#00eeff,#ba23ff,#ff2892,#04ffc3,#00eeff)!important;background-size:400% 400%!important;animation:rgb 7s linear infinite!important;box-shadow:0 0 26px #b825ff99,0 0 44px #00ecff65!important}.inside{background:#101329!important;backdrop-filter:none!important}.rank{background:#222b43!important}.rank:first-child{background:#34283b!important}.name,.num{color:#fff!important;text-shadow:0 2px 3px #000!important}</style></head>')
 
 async def index(request): return web.Response(text=RESTORED_GIFTS_HTML,content_type="text/html")
 async def status(request):
