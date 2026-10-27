@@ -179,7 +179,13 @@ body{padding:32px!important}
 .num{font-size:23px!important;color:white!important;text-shadow:0 2px 4px black!important}
 @keyframes rgbGamingMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 """
-RESTORED_GIFTS_HTML = HTML.replace(_CURRENT_CSS, _ORIGINAL_CSS + _RGB_GAMING_CSS, 1)
+_FULL_HEIGHT_CSS = """
+/* Leave sufficient canvas space for all five rows and the neon glow. */
+html,body{height:auto!important;min-height:780px!important;overflow:visible!important}
+body{padding:36px 36px 100px!important}
+.shell{margin-bottom:65px!important}
+"""
+RESTORED_GIFTS_HTML = HTML.replace(_CURRENT_CSS, _ORIGINAL_CSS + _RGB_GAMING_CSS + _FULL_HEIGHT_CSS, 1)
 
 async def index(request): return web.Response(text=RESTORED_GIFTS_HTML,content_type="text/html")
 async def status(request):
