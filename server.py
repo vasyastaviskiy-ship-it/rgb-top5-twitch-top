@@ -180,7 +180,14 @@ _RGB_MOTION_CSS = """
 .shell{position:relative!important;isolation:isolate!important;background:linear-gradient(110deg,#00ffff,#ff009d,#7629ff,#00ff99,#00ffff)!important;background-size:500% 500%!important;animation:gamingShift 3s ease-in-out infinite!important;box-shadow:0 0 22px #06eaff,0 0 38px #be23ff,0 0 50px #ff1b9b!important}
 .shell::before{content:"";position:absolute;inset:-5px;border-radius:30px;z-index:-1;background:conic-gradient(from 0deg,#00ffff,#a223ff,#ff228e,#00ffb2,#00ffff);filter:blur(12px);animation:gamingHue 3s linear infinite;pointer-events:none}
 """
-RESTORED_GIFTS_HTML = HTML.replace(_CURRENT_CSS, _ORIGINAL_CSS + _GLOW_CSS + _RGB_MOTION_CSS, 1)
+_NO_SIDE_BAR_CSS = """
+html,body{overflow:hidden!important;scrollbar-width:none!important}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}
+body{padding:30px!important}
+.shell{margin-bottom:0!important}
+.shell::before{display:none!important}
+"""
+RESTORED_GIFTS_HTML = HTML.replace(_CURRENT_CSS, _ORIGINAL_CSS + _GLOW_CSS + _RGB_MOTION_CSS + _NO_SIDE_BAR_CSS, 1)
 
 async def index(request): return web.Response(text=RESTORED_GIFTS_HTML,content_type="text/html")
 async def status(request):
