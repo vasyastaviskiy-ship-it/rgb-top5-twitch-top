@@ -1,0 +1,76 @@
+import asyncio, os, time
+from aiohttp import web
+from TikTokLive import TikTokLiveClient
+from TikTokLive.events import ConnectEvent, DisconnectEvent, GiftEvent
+
+USER=os.environ.get("TIKTOK_USERNAME","twitch_top").lstrip("@")
+PORT=int(os.environ.get("PORT","10000"))
+state={"status":"starting","message":"Ожидание","top":[],"last_gift":None}
+scores={}
+client=TikTokLiveClient(unique_id="@"+USER)
+
+@client.on(ConnectEvent)
+async def connected(event):
+    state.update(status="connected",message="TikTok подключен")
+    print("CONNECTED @"+USER,flush=True)
+
+@client.on(DisconnectEvent)
+async def disconnected(event):
+    state.update(status="disconnected",message="Эфир отключен")
+
+@client.on(GiftEvent)
+async def gift(event):
+    g=getattr(event,"gift",None)
+    if g is None or getattr(event,"streaking",False): return
+    price=int(getattr(g,"diamond_count",0) or getattr(getattr(g,"info",None),"diamond_count",0) or 0)
+    if price<=0: return
+    count=max(1,int(getattr(event,"repeat_count",1) or 1))
+    u=getattr(event,"user",None)
+    uid=str(getattr(u,"unique_id","") or getattr(u,"nickname","Зритель"))
+    name=str(getattr(u,"nickname","") or uid)
+    item=scores.setdefault(uid,{"name":name,"coins":0})
+    item["name"]=name
+    item["coins"]+=price*count
+    state["top"]=sorted(scores.values(),key=lambda x:-x["coins"])[:5]
+    state["last_gift"]={"name":name,"gift":str(getattr(g,"name","Подарок")),"coins":price*count}
+    print("GIFT",name,price*count,flush=True)
+
+async def loop():
+    await asyncio.sleep(2)
+    while True:
+        try:
+            state.update(status="connecting",message="Подключение к TikTok...")
+            await client.start(fetch_gift_info=True)
+        except asyncio.CancelledError: raise
+        except Exception as e:
+            state.update(status="error",message=(type(e).__name__+": "+str(e))[:180])
+            print("TikTok error",repr(e),flush=True)
+        await asyncio.sleep(15)
+
+async def startup(app): app["worker"]=asyncio.create_task(loop())
+async def cleanup(app):
+    app["worker"].cancel()
+    await asyncio.gather(app["worker"],return_exceptions=True)
+
+HTML=r"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>
+*{box-sizing:border-box}html,body{margin:0;background:transparent;color:white;font-family:Arial,sans-serif;overflow:hidden}body{padding:26px}.shell{width:460px;padding:4px;border-radius:25px;background:linear-gradient(120deg,#00eeff,#ba23ff,#ff2892,#04ffc3,#00eeff);background-size:400% 400%;animation:rgb 7s linear infinite;box-shadow:0 0 26px #b825ff99,0 0 44px #00ecff65}.inside{background:linear-gradient(130deg,#0b0f2abd,#17133299);border-radius:21px;padding:23px 19px 20px;backdrop-filter:blur(3px)}header{display:flex;justify-content:space-between;align-items:center}.eyebrow{font-weight:900;font-size:11px;letter-spacing:3px;color:#63f1ff}.title{font-weight:1000;font-size:32px;margin-top:8px;text-shadow:0 0 25px #c439ff}.title span{color:#4df1ff}.live{font-size:11px;border:1px solid #f25c9e;border-radius:30px;padding:7px;color:#ff9dc4}.line{height:2px;background:linear-gradient(90deg,#00f0ff,#f152ff,#ff3e95);box-shadow:0 0 18px #00fff0;margin:16px 0}.rank{margin:9px 0;padding:12px;display:flex;gap:12px;align-items:center;background:#17203e9e;border:1px solid #ffffff35;border-radius:14px;position:relative;overflow:hidden;min-height:63px;animation:enter .3s ease}.rank:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--c);box-shadow:0 0 15px var(--c)}.pos{width:37px;text-align:center;font-size:23px;font-weight:900;color:var(--c);text-shadow:0 0 15px var(--c)}.who{flex:1;min-width:0}.name{font-size:16px;font-weight:900;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.sub{font-size:10px;color:#aabbd8;margin-top:4px}.num{text-align:right;font-size:18px;font-weight:900;color:#e2feff}.num small{display:block;font-size:10px;color:#98a9d0;letter-spacing:1px;margin-top:4px}.foot{display:flex;justify-content:space-between;font-size:11px;color:#aac4db;margin-top:15px;gap:10px}.foot b{color:#79faff}#recent{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:270px}@keyframes rgb{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}@keyframes enter{from{transform:translateX(-12px);opacity:.2}to{transform:translateX(0);opacity:1}}
+</style></head><body><div class="shell"><div class="inside"><header><div><div class="eyebrow">TWITCH_TOP · RGB GAMING</div><div class="title">TOP <span>5</span> GIFTERS</div></div><div class="live">● LIVE</div></header><div class="line"></div><div id="list"></div><div class="foot"><span id="recent">Ждём подарков…</span><b id="status">● ПОДКЛЮЧЕНИЕ</b></div></div></div><script>
+const colors=['#ffd76a','#bde8ff','#ffa868','#9e8dff','#62ffe1'],medals=['👑','②','③','④','⑤'];
+const demo=new URLSearchParams(location.search).has('demo');
+function render(top){let list=document.getElementById('list');list.innerHTML='';for(let i=0;i<5;i++){let u=top[i]||{name:'Свободное место',coins:0};let el=document.createElement('div');el.className='rank';el.style.setProperty('--c',colors[i]);let p=document.createElement('div');p.className='pos';p.textContent=medals[i];let who=document.createElement('div');who.className='who';let name=document.createElement('div');name.className='name';name.textContent=u.name;let sub=document.createElement('div');sub.className='sub';sub.textContent=i===0?'ЛИДЕР ЭФИРА':'ПОДАРКИ ЗА ЭФИР';who.append(name,sub);let num=document.createElement('div');num.className='num';num.textContent=Number(u.coins||0).toLocaleString('ru-RU');let small=document.createElement('small');small.textContent='💎 МОНЕТ';num.append(small);el.append(p,who,num);list.append(el)}}
+if(demo){render([{name:'DiamondKing',coins:12450},{name:'NeonQueen',coins:8420},{name:'MinecraftPro',coins:5100},{name:'Alex',coins:2500},{name:'Steve',coins:960}]);document.getElementById('status').textContent='● ДЕМО';}
+else{render([]);async function poll(){try{const r=await fetch('/api/state',{cache:'no-store'});let s=await r.json();render(s.top||[]);document.getElementById('status').textContent=s.status==='connected'?'● TIKTOK LIVE':'● '+(s.status||'WAIT').toUpperCase();if(s.last_gift)document.getElementById('recent').textContent=s.last_gift.name+' · '+s.last_gift.gift+' 💎 '+s.last_gift.coins;}catch(e){document.getElementById('status').textContent='● ОШИБКА СВЯЗИ'}}poll();setInterval(poll,2000);}
+</script></body></html>"""
+
+async def index(request): return web.Response(text=HTML,content_type="text/html")
+async def status(request):
+    r=web.json_response(state)
+    r.headers["Cache-Control"]="no-store"
+    return r
+app=web.Application()
+app.router.add_get("/",index)
+app.router.add_get("/api/state",status)
+app.on_startup.append(startup)
+app.on_cleanup.append(cleanup)
+if __name__=="__main__":
+    web.run_app(app,host="0.0.0.0",port=PORT)
