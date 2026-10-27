@@ -162,7 +162,19 @@ async def likes_api(request):
     return r
 
 
-RESTORED_GIFTS_HTML=HTML.replace('</head>', '<style>.shell{overflow:visible!important;filter:drop-shadow(0 0 9px #00efff) drop-shadow(0 0 15px #a02aff) drop-shadow(0 0 20px #ff29b7)!important;animation:rgb 4s linear infinite!important}.rank{box-shadow:0 0 8px #00f5ff77,inset 0 0 9px #843bff55!important}.line{box-shadow:0 0 12px #ff39ca,0 0 17px #00eeff!important}.shell{margin-bottom:55px!important}.inside{padding-bottom:28px!important}body{overflow:visible!important;padding-bottom:80px!important}html{overflow:visible!important}.shell{background:linear-gradient(120deg,#00eeff,#ba23ff,#ff2892,#04ffc3,#00eeff)!important;background-size:400% 400%!important;animation:rgb 7s linear infinite!important;box-shadow:0 0 26px #b825ff99,0 0 44px #00ecff65!important}.inside{background:#101329!important;backdrop-filter:none!important}.rank{background:#222b43!important}.rank:first-child{background:#34283b!important}.name,.num{color:#fff!important;text-shadow:0 2px 3px #000!important}</style></head>')
+# Keep the original RGB visual CSS and discard conflicting transparent variants.
+_ORIGINAL_CSS = HTML.split("<style>", 1)[1].split("\n.inside{background:linear-gradient(135deg", 1)[0]
+_CURRENT_CSS = HTML.split("<style>", 1)[1].split("</style>", 1)[0]
+_GLOW_CSS = """
+body{padding:20px!important;overflow:visible!important}
+html{overflow:visible!important}
+.shell{background:linear-gradient(120deg,#00eeff,#ba23ff,#ff2892,#04ffc3,#00eeff)!important;background-size:400% 400%!important;animation:rgb 6s linear infinite!important;box-shadow:0 0 25px #00eeffaa,0 0 48px #a02aff77,0 0 60px #ff289255!important;margin-bottom:40px!important}
+.inside{background:#101329!important;backdrop-filter:none!important}
+.rank{background:#202845!important}
+.name{font-size:21px!important;color:#fff!important;text-shadow:0 2px 4px #000!important}
+.num{font-size:23px!important;color:#fff!important;text-shadow:0 2px 4px #000!important}
+"""
+RESTORED_GIFTS_HTML = HTML.replace(_CURRENT_CSS, _ORIGINAL_CSS + _GLOW_CSS, 1)
 
 async def index(request): return web.Response(text=RESTORED_GIFTS_HTML,content_type="text/html")
 async def status(request):
