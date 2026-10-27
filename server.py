@@ -120,6 +120,33 @@ def clean(html):
 CLEAN_LIKES_HTML=clean(LIKES_HTML)
 CLEAN_GIFTS_HTML=clean(HTML)
 
+MINECRAFT_CSS = """<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+html,body{background:transparent!important;overflow:hidden!important}
+body{padding:18px!important}
+.shell{width:480px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;filter:none!important;animation:none!important;padding:0!important}
+.inside{padding:15px!important;border-radius:0!important;background:transparent!important;backdrop-filter:none!important}
+.eyebrow{font-family:monospace!important;color:#aeff97!important;font-size:12px!important;letter-spacing:1px!important;text-shadow:2px 2px #162b10!important}
+.title{font-family:'Press Start 2P',monospace!important;color:#fff!important;font-size:19px!important;line-height:1.6!important;text-shadow:3px 3px #202020!important}
+.title span{color:#79fc61!important}
+.live{border:3px solid #ffd36a!important;border-radius:0!important;background:#3d2919d9!important;color:#fff8d4!important;box-shadow:3px 3px #241806!important}
+.line{height:5px!important;background:repeating-linear-gradient(90deg,#529839 0px,#529839 18px,#80582c 18px,#80582c 35px)!important;box-shadow:none!important;margin:13px 0!important}
+.rank{background:rgba(24,26,19,.69)!important;border:3px solid #7d9469!important;border-radius:0!important;box-shadow:inset 3px 3px #b6c4a1,inset -3px -3px #394831,3px 3px #0009!important;animation:none!important;min-height:69px!important;padding:10px!important;margin:7px 0!important}
+.rank:before{display:none!important}
+.rank:first-child{border-color:#e6bf5e!important;box-shadow:inset 3px 3px #fff0a1,inset -3px -3px #8b6624,3px 3px #000a!important}
+.pos{font-family:monospace!important;font-size:22px!important;color:#ffd968!important;text-shadow:2px 2px #17130a!important}
+.name{font-family:monospace!important;font-size:19px!important;font-weight:900!important;color:white!important;text-shadow:2px 2px #000!important}
+.num{font-family:monospace!important;font-size:20px!important;font-weight:900!important;color:#93ff9a!important;text-shadow:2px 2px #000!important}
+.num small,.sub{font-family:monospace!important;color:#e8fbe2!important;text-shadow:1px 1px #000!important}
+.foot{font-family:monospace!important;color:white!important;text-shadow:2px 2px #000!important}
+</style>"""
+def minecraft_style(html):
+    return html.replace("</head>",MINECRAFT_CSS+"</head>")
+MINECRAFT_LIKES_HTML=minecraft_style(LIKES_HTML)
+MINECRAFT_GIFTS_HTML=minecraft_style(HTML)
+async def minecraft_likes(request): return web.Response(text=MINECRAFT_LIKES_HTML,content_type="text/html")
+async def minecraft_gifts(request): return web.Response(text=MINECRAFT_GIFTS_HTML,content_type="text/html")
+
 async def clean_likes_page(request): return web.Response(text=CLEAN_LIKES_HTML,content_type="text/html")
 async def clean_gifts_page(request): return web.Response(text=CLEAN_GIFTS_HTML,content_type="text/html")
 
@@ -141,6 +168,8 @@ app.router.add_get("/likes",likes_page)
 app.router.add_get("/api/likes-state",likes_api)
 app.router.add_get("/clean/likes",clean_likes_page)
 app.router.add_get("/clean/gifts",clean_gifts_page)
+app.router.add_get("/minecraft/likes",minecraft_likes)
+app.router.add_get("/minecraft/gifts",minecraft_gifts)
 app.on_startup.append(startup)
 app.on_cleanup.append(cleanup)
 if __name__=="__main__":
