@@ -97,6 +97,32 @@ LIKES_HTML=(HTML.replace("TOP <span>5</span> GIFTERS","TOP <span>5</span> LIKES"
  .replace("DiamondKing","LikeMaster")
  .replace("NeonQueen","HeartQueen"))
 
+CLEAN_CSS = """<style>
+html,body{background:transparent!important;color:#fff!important}
+body{padding:12px!important}
+.shell{width:460px!important;background:transparent!important;border:0!important;box-shadow:none!important;filter:none!important;padding:0!important;animation:none!important;border-radius:0!important}
+.inside{background:transparent!important;backdrop-filter:none!important;padding:8px!important;border-radius:0!important}
+.eyebrow{color:#fff!important;font-size:12px!important;letter-spacing:1px!important}
+.title{font-size:28px!important;color:white!important;text-shadow:0 2px 3px #000!important}
+.title span{color:white!important}
+.line{height:1px!important;background:rgba(255,255,255,.8)!important;box-shadow:none!important;margin:10px 0!important}
+.live{border:1px solid #fff!important;color:#fff!important}
+.rank{background:transparent!important;border:0!important;border-bottom:1px solid rgba(255,255,255,.45)!important;border-radius:0!important;box-shadow:none!important;animation:none!important;min-height:58px!important;padding:9px!important;margin:4px 0!important}
+.rank:before{display:none!important}
+.pos{font-size:22px!important;color:white!important;text-shadow:0 2px 3px #000!important}
+.name{font-size:21px!important;color:white!important;font-weight:800!important;text-shadow:0 2px 3px black,1px 1px 2px black!important}
+.num{font-size:22px!important;color:white!important;text-shadow:0 2px 3px black!important}
+.num small,.sub,.foot{color:white!important;text-shadow:0 2px 3px black!important}
+</style>"""
+# CSS appended after the existing page CSS so clean style wins; remove emoji leader color via CSS.
+def clean(html):
+    return html.replace("</head>",CLEAN_CSS+"</head>")
+CLEAN_LIKES_HTML=clean(LIKES_HTML)
+CLEAN_GIFTS_HTML=clean(HTML)
+
+async def clean_likes_page(request): return web.Response(text=CLEAN_LIKES_HTML,content_type="text/html")
+async def clean_gifts_page(request): return web.Response(text=CLEAN_GIFTS_HTML,content_type="text/html")
+
 async def likes_page(request): return web.Response(text=LIKES_HTML,content_type="text/html")
 async def likes_api(request):
     r=web.json_response({"status":state["status"],"top":likes_state["top"],"last_like":likes_state["last_like"]})
@@ -113,6 +139,8 @@ app.router.add_get("/",index)
 app.router.add_get("/api/state",status)
 app.router.add_get("/likes",likes_page)
 app.router.add_get("/api/likes-state",likes_api)
+app.router.add_get("/clean/likes",clean_likes_page)
+app.router.add_get("/clean/gifts",clean_gifts_page)
 app.on_startup.append(startup)
 app.on_cleanup.append(cleanup)
 if __name__=="__main__":
