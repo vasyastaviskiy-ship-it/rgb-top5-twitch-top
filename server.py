@@ -60,6 +60,11 @@ async def loop():
             await client.start(fetch_gift_info=True)
         except asyncio.CancelledError: raise
         except Exception as e:
+            if type(e).__name__ == "AlreadyConnectedError":
+                # The existing TikTok connection is alive; do not call start again.
+                state.update(status="connected",message="TikTok подключен")
+                print("TikTok connection already active; keeping it",flush=True)
+                await asyncio.Event().wait()
             state.update(status="error",message=(type(e).__name__+": "+str(e))[:180])
             print("TikTok error",repr(e),flush=True)
         await asyncio.sleep(15)
