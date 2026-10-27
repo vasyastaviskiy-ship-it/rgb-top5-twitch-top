@@ -1,12 +1,14 @@
 import asyncio, os, time
 from aiohttp import web
 from TikTokLive import TikTokLiveClient
-from TikTokLive.events import ConnectEvent, DisconnectEvent, GiftEvent
+from TikTokLive.events import ConnectEvent, DisconnectEvent, GiftEvent, LikeEvent
 
 USER=os.environ.get("TIKTOK_USERNAME","twitch_top").lstrip("@")
 PORT=int(os.environ.get("PORT","10000"))
 state={"status":"starting","message":"Ожидание","top":[],"last_gift":None}
 scores={}
+likes_scores={}
+likes_state={"top":[],"last_like":None}
 client=TikTokLiveClient(unique_id="@"+USER)
 
 @client.on(ConnectEvent)
@@ -35,6 +37,21 @@ async def gift(event):
     state["last_gift"]={"name":name,"gift":str(getattr(g,"name","Подарок")),"coins":price*count}
     print("GIFT",name,price*count,flush=True)
 
+@client.on(LikeEvent)
+async def like(event):
+    u=getattr(event,"user",None)
+    uid=str(getattr(u,"unique_id","") or getattr(u,"nickname","Зритель"))
+    name=str(getattr(u,"nickname","") or uid)
+    # LikeEvent.count is the increment for this event, not the livestream total.
+    count=int(getattr(event,"count",0) or 0)
+    if count <= 0: return
+    count=min(count,10000)
+    item=likes_scores.setdefault(uid,{"name":name,"coins":0})
+    item["name"]=name
+    item["coins"]+=count
+    likes_state["top"]=sorted(likes_scores.values(),key=lambda x:-x["coins"])[:5]
+    likes_state["last_like"]={"name":name,"count":count}
+
 async def loop():
     await asyncio.sleep(2)
     while True:
@@ -62,6 +79,22 @@ if(demo){render([{name:'DiamondKing',coins:12450},{name:'NeonQueen',coins:8420},
 else{render([]);let lastTop='[]';async function poll(){try{const r=await fetch('/api/state',{cache:'no-store'});let s=await r.json();const nextTop=JSON.stringify(s.top||[]);if(nextTop!==lastTop){render(s.top||[]);lastTop=nextTop;}document.getElementById('status').textContent=s.status==='connected'?'● TIKTOK LIVE':'● '+(s.status||'WAIT').toUpperCase();if(s.last_gift)document.getElementById('recent').textContent=s.last_gift.name+' · '+s.last_gift.gift+' 💎 '+s.last_gift.coins;}catch(e){document.getElementById('status').textContent='● ОШИБКА СВЯЗИ'}}poll();setInterval(poll,2000);}
 </script></body></html>"""
 
+LIKES_HTML=(HTML.replace("TOP <span>5</span> GIFTERS","TOP <span>5</span> LIKES")
+ .replace("💎 МОНЕТ","❤️ ЛАЙКОВ")
+ .replace("ПОДАРКИ ЗА ЭФИР","ЛАЙКИ ЗА ЭФИР")
+ .replace("Ждём подарков…","Ждём лайков…")
+ .replace("'/api/state'","'/api/likes-state'")
+ .replace("s.last_gift.name+' · '+s.last_gift.gift+' 💎 '+s.last_gift.coins","s.last_like.name+' · ❤️ '+s.last_like.count")
+ .replace("if(s.last_gift)","if(s.last_like)")
+ .replace("DiamondKing","LikeMaster")
+ .replace("NeonQueen","HeartQueen"))
+
+async def likes_page(request): return web.Response(text=LIKES_HTML,content_type="text/html")
+async def likes_api(request):
+    r=web.json_response({"status":state["status"],"top":likes_state["top"],"last_like":likes_state["last_like"]})
+    r.headers["Cache-Control"]="no-store"
+    return r
+
 async def index(request): return web.Response(text=HTML,content_type="text/html")
 async def status(request):
     r=web.json_response(state)
@@ -70,6 +103,8 @@ async def status(request):
 app=web.Application()
 app.router.add_get("/",index)
 app.router.add_get("/api/state",status)
+app.router.add_get("/likes",likes_page)
+app.router.add_get("/api/likes-state",likes_api)
 app.on_startup.append(startup)
 app.on_cleanup.append(cleanup)
 if __name__=="__main__":
