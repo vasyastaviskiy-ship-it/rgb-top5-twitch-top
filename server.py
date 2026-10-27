@@ -163,31 +163,23 @@ async def likes_api(request):
 
 
 # Keep the original RGB visual CSS and discard conflicting transparent variants.
+# Gift leaderboard has its own isolated RGB style; other routes are unchanged.
 _ORIGINAL_CSS = HTML.split("<style>", 1)[1].split("\n.inside{background:linear-gradient(135deg", 1)[0]
 _CURRENT_CSS = HTML.split("<style>", 1)[1].split("</style>", 1)[0]
-_GLOW_CSS = """
-body{padding:20px!important;overflow:visible!important}
-html{overflow:visible!important}
-.shell{background:linear-gradient(120deg,#00eeff,#ba23ff,#ff2892,#04ffc3,#00eeff)!important;background-size:400% 400%!important;animation:rgb 6s linear infinite!important;box-shadow:0 0 25px #00eeffaa,0 0 48px #a02aff77,0 0 60px #ff289255!important;margin-bottom:40px!important}
-.inside{background:#101329!important;backdrop-filter:none!important}
-.rank{background:#202845!important}
-.name{font-size:21px!important;color:#fff!important;text-shadow:0 2px 4px #000!important}
-.num{font-size:23px!important;color:#fff!important;text-shadow:0 2px 4px #000!important}
-"""
-_RGB_MOTION_CSS = """
-@keyframes gamingHue {0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
-@keyframes gamingShift {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-.shell{position:relative!important;isolation:isolate!important;background:linear-gradient(110deg,#00ffff,#ff009d,#7629ff,#00ff99,#00ffff)!important;background-size:500% 500%!important;animation:gamingShift 3s ease-in-out infinite!important;box-shadow:0 0 22px #06eaff,0 0 38px #be23ff,0 0 50px #ff1b9b!important}
-.shell::before{content:"";position:absolute;inset:-5px;border-radius:30px;z-index:-1;background:conic-gradient(from 0deg,#00ffff,#a223ff,#ff228e,#00ffb2,#00ffff);filter:blur(12px);animation:gamingHue 3s linear infinite;pointer-events:none}
-"""
-_NO_SIDE_BAR_CSS = """
-html,body{overflow:hidden!important;scrollbar-width:none!important}
+_RGB_GAMING_CSS = """
+html,body{background:transparent!important;overflow:hidden!important;scrollbar-width:none!important}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}
-body{padding:30px!important}
-.shell{margin-bottom:0!important}
-.shell::before{display:none!important}
+body{padding:32px!important}
+.shell{position:relative!important;width:460px!important;padding:5px!important;border:0!important;border-radius:25px!important;overflow:visible!important;background:linear-gradient(105deg,#00f5ff,#8c27ff,#ff1b93,#11ffb5,#00f5ff)!important;background-size:450% 450%!important;animation:rgbGamingMove 3s linear infinite!important;box-shadow:0 0 12px 3px #00eaffcc,0 0 23px 5px #a028ff99,0 0 32px 6px #ff289177!important;filter:none!important}
+.shell:before,.shell:after{display:none!important}
+.inside{background:#101329!important;backdrop-filter:none!important;border-radius:20px!important;padding:22px 19px 20px!important}
+.rank{background:#202845!important;border:1px solid #7889b44a!important;min-height:73px!important}
+.rank:first-child{background:#34283b!important}
+.name{font-size:21px!important;font-weight:900!important;color:white!important;text-shadow:0 2px 4px black!important}
+.num{font-size:23px!important;color:white!important;text-shadow:0 2px 4px black!important}
+@keyframes rgbGamingMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 """
-RESTORED_GIFTS_HTML = HTML.replace(_CURRENT_CSS, _ORIGINAL_CSS + _GLOW_CSS + _RGB_MOTION_CSS + _NO_SIDE_BAR_CSS, 1)
+RESTORED_GIFTS_HTML = HTML.replace(_CURRENT_CSS, _ORIGINAL_CSS + _RGB_GAMING_CSS, 1)
 
 async def index(request): return web.Response(text=RESTORED_GIFTS_HTML,content_type="text/html")
 async def status(request):
