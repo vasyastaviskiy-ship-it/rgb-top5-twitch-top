@@ -43,7 +43,8 @@ async def like(event):
     uid=str(getattr(u,"unique_id","") or getattr(u,"nickname","Зритель"))
     name=str(getattr(u,"nickname","") or uid)
     # LikeEvent.count is the increment for this event, not the livestream total.
-    count=int(getattr(event,"count",0) or 0)
+    count=int(getattr(event,"count",0) or getattr(event,"like_count",0) or 0)
+    print("LIKE_EVENT",name,"count=",count,flush=True)
     if count <= 0: return
     count=min(count,10000)
     item=likes_scores.setdefault(uid,{"name":name,"coins":0})
@@ -51,6 +52,7 @@ async def like(event):
     item["coins"]+=count
     likes_state["top"]=sorted(likes_scores.values(),key=lambda x:-x["coins"])[:5]
     likes_state["last_like"]={"name":name,"count":count}
+    print("LIKE_TOP",likes_state["top"],flush=True)
 
 async def loop():
     await asyncio.sleep(2)
