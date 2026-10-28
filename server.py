@@ -207,35 +207,12 @@ async def goal_state(request):
     r.headers["Cache-Control"]="no-store"
     return r
 
-async def index(request): return web.Response(text=RESTORED_GIFTS_HTML,content_type="text/html")
-async def status(request):
-    r=web.json_response(state)
-    r.headers["Cache-Control"]="no-store"
-    return r
-app=web.Application()
-app.router.add_get("/",index)
-app.router.add_get("/goal",goal_page)
-app.router.add_get("/coin-explosion",coin_explosion)
-app.router.add_get("/goal/setup",goal_setup)
-app.router.add_get("/api/goal-state",goal_state)
-app.router.add_get("/api/state",status)
-app.router.add_get("/likes",likes_page)
-app.router.add_get("/api/likes-state",likes_api)
-app.router.add_get("/clean/likes",clean_likes_page)
-app.router.add_get("/clean/gifts",clean_gifts_page)
-app.router.add_get("/minecraft/likes",minecraft_likes)
-app.router.add_get("/minecraft/gifts",minecraft_gifts)
-app.on_startup.append(startup)
-app.on_cleanup.append(cleanup)
-if __name__=="__main__":
-    web.run_app(app,host="0.0.0.0",port=PORT)
-;c.style.setProperty('--x',(Math.random()*300-60)+'px');c.style.setProperty('--y',(-35-Math.random()*190)+'px');c.style.setProperty('--r',(Math.random()*720-360)+'deg');c.style.animationDelay=(Math.random()*.17)+'s';scene.append(c);setTimeout(()=>c.remove(),1600)}}\nfunction victory(){scene.classList.add('win');document.getElementById('chest').classList.add('open');coins(16);const m=document.createElement('div');m.className='message';m.textContent='🎉 ЦЕЛЬ ДОСТИГНУТА!';scene.append(m);setTimeout(()=>{scene.classList.remove('win');m.remove()},2000)}\nfunction draw(value){value=Math.max(0,Math.floor(Number(value)||0));if(last===null){cur.textContent=fmt(value)}else if(value!==last){count(last,value);if(value>last)coins(8)}const pct=100*value/target;document.getElementById('fill').style.width=Math.min(100,pct)+'%';document.getElementById('pct').textContent=Math.floor(pct)+'%';if(pct>=100&&!won){won=true;victory()}if(pct<100){won=false;document.getElementById('chest').classList.remove('open')}last=value}\nasync function poll(){if(demo){draw(Math.floor(Date.now()/1300)%11000);return}try{const r=await fetch('/api/goal-state',{cache:'no-store'});if(!r.ok)throw Error('server');const j=await r.json();draw(j.total)}catch(e){document.getElementById('pct').textContent='ОЖИДАНИЕ'}}poll();setInterval(poll,1500)\n</script></body></html>"
-async def goal_page(request): return web.Response(text=GOAL_HTML,content_type="text/html")
-async def goal_setup(request): return web.Response(text=GOAL_SETUP_HTML,content_type="text/html")
-async def goal_state(request):
-    r=web.json_response({"total":sum(item["coins"] for item in scores.values()),"status":state["status"]})
-    r.headers["Cache-Control"]="no-store"
-    return r
+COIN_EXPLOSION_HTML = """<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+*{box-sizing:border-box}body,html{margin:0;background:transparent;color:white;font-family:Arial,sans-serif;overflow:hidden}body{padding:38px}.wrap{width:520px;height:245px;position:relative}.card{position:absolute;left:100px;top:65px;width:410px;padding:17px 21px 21px 62px;background:linear-gradient(130deg,#160e2f,#241337);border:2px solid #f3b54b;border-radius:20px;box-shadow:0 0 22px #faab43a8,0 0 32px #9429f488}.title{font-size:13px;color:#ffdc82;letter-spacing:2px;font-weight:900}.num{font-size:29px;font-weight:900;margin:9px 0 14px;text-shadow:0 0 16px #ffbb55}.track{height:18px;border-radius:18px;background:#3b2946;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#e9a525,#fff08b,#fbab24);transition:width 1s ease}.chest{position:absolute;top:80px;left:5px;font-size:105px;filter:drop-shadow(0 0 18px #ffe477);animation:bob 3s ease-in-out infinite}.coin{position:absolute;left:67px;top:119px;font-size:26px;pointer-events:none;animation:fly 1.3s ease-out forwards}.win{position:absolute;left:145px;top:20px;font-size:24px;color:#ffe77f;font-weight:900;animation:fly 2s ease-out forwards}@keyframes bob{50%{transform:translateY(-5px)}}@keyframes fly{to{opacity:0;transform:translate(var(--x),-130px) rotate(360deg)}}
+</style></head><body><div class="wrap" id="wrap"><div class="card"><div class="title">✦ COIN EXPLOSION</div><div class="num"><span id="sum">0</span> / <span id="goal">5000</span> 💎</div><div class="track"><div class="fill" id="bar"></div></div></div><div class="chest">🧰</div></div><script>
+let q=new URLSearchParams(location.search),target=Math.max(1,Number(q.get("target"))||5000),last=null;document.getElementById("goal").textContent=target.toLocaleString("ru-RU");function coins(){let w=document.getElementById("wrap");for(let i=0;i<11;i++){let c=document.createElement("div");c.className="coin";c.textContent="🪙";c.style.setProperty("--x",(Math.random()*270-35)+"px");c.style.animationDelay=(Math.random()*.22)+"s";w.append(c);setTimeout(()=>c.remove(),1800)}}async function tick(){try{let r=await fetch("/api/goal-state",{cache:"no-store"});let d=await r.json();let v=Number(d.total)||0;if(last!==null&&v>last){coins();if(last<target&&v>=target){let n=document.createElement("div");n.className="win";n.textContent="🎉 ЦЕЛЬ ДОСТИГНУТА";document.getElementById("wrap").append(n);setTimeout(()=>n.remove(),2200)}}document.getElementById("sum").textContent=v.toLocaleString("ru-RU");document.getElementById("bar").style.width=Math.min(100,v/target*100)+"%";last=v}catch(e){}}tick();setInterval(tick,1500)
+</script></body></html>"""
+async def coin_explosion(request): return web.Response(text=COIN_EXPLOSION_HTML,content_type="text/html")
 
 async def index(request): return web.Response(text=RESTORED_GIFTS_HTML,content_type="text/html")
 async def status(request):
@@ -245,6 +222,8 @@ async def status(request):
 app=web.Application()
 app.router.add_get("/",index)
 app.router.add_get("/goal",goal_page)
+app.router.add_get("/coin-explosion",coin_explosion)
+app.router.add_get("/coin-explosion",coin_explosion)
 app.router.add_get("/goal/setup",goal_setup)
 app.router.add_get("/api/goal-state",goal_state)
 app.router.add_get("/api/state",status)
